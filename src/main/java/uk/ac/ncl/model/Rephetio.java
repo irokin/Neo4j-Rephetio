@@ -24,6 +24,7 @@ public class Rephetio {
 
     public final TripleSet triples;
     public GraphDatabaseService graph;
+    File outFile;
 
     int startDepth, endDepth;
 
@@ -47,6 +48,11 @@ public class Rephetio {
         Settings.threads = args.getInt("threads");
         Settings.depth = args.getInt("depth");
         Settings.rw = args.getInt("rw");
+        Settings.allowInverse = args.getBoolean("inverse");
+
+        outFile = new File(Settings.home, args.getString("out"));
+        if(!outFile.exists())
+            outFile.mkdir();
 
         Settings.report();
 
@@ -73,7 +79,7 @@ public class Rephetio {
         Table<Triple, MetaPath, Double> globalTable = HashBasedTable.create();
         List<Triple> tripleList = new ArrayList<>(triples.getTripleByPred(Settings.target));
 
-        BlockingQueue<Triple> queue = new LinkedBlockingDeque<>(tripleList.subList(0, 50));
+        BlockingQueue<Triple> queue = new LinkedBlockingDeque<>(tripleList);
         TraverseTask[] tasks = new TraverseTask[Settings.threads];
         for (int i = 0; i < tasks.length; i++) {
             tasks[i] = new TraverseTask(i, queue);
@@ -90,7 +96,7 @@ public class Rephetio {
 
         System.out.println("# Finished Building Matrix: Time = " + (float) (System.currentTimeMillis() - s) / 1000. + "s");
 
-        IO.writeMatrix(globalTable, Settings.home);
+        IO.writeMatrix(globalTable, outFile);
 
         return globalTable;
     }

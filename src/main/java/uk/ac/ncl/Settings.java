@@ -10,11 +10,13 @@ public class Settings {
     public static void report() {
         System.out.println(MessageFormat.format("# Settings:\n" +
                 "# Identifier: {0} | Depth: {1}\n" +
-                "# Target: {2} | Threads: {3}",
+                "# Target: {2} | Threads: {3}\n" +
+                        "# Inverse: {4}",
                 identifier,
                 depth,
                 target,
-                threads));
+                threads,
+                allowInverse));
     }
 
     public static String identifier = "name";
@@ -23,6 +25,7 @@ public class Settings {
     public static int threads = 6;
     public static int rw = 150;
     public static File home;
+    public static boolean allowInverse = false;
 
     private static GraphDatabaseService currentGraph;
     public static void setCurrentGraph(GraphDatabaseService graph) {

@@ -55,22 +55,32 @@ public class MetaPath {
     @Override
     public String toString() {
         List<String> words = new ArrayList<>();
-        for (int i = 0; i < directions.size(); i++) {
-            if(directions.get(i).equals(Direction.OUTGOING))
+        if(Settings.allowInverse) {
+            for (int i = 0; i < directions.size(); i++) {
+                if(directions.get(i).equals(Direction.OUTGOING))
+                    words.add(relationships.get(i) + "(" + nodes.get(i) + ", " + nodes.get(i + 1) + ")");
+                else
+                    words.add(relationships.get(i) + "(" + nodes.get(i + 1) + ", " + nodes.get(i ) + ")");
+            }
+        } else {
+            for (int i = 0; i < relationships.size(); i++) {
                 words.add(relationships.get(i) + "(" + nodes.get(i) + ", " + nodes.get(i + 1) + ")");
-            else
-                words.add(relationships.get(i) + "(" + nodes.get(i + 1) + ", " + nodes.get(i ) + ")");
+            }
         }
         return String.join(", ", words);
     }
 
     public String toOutString() {
         List<String> words = new ArrayList<>();
-        for (int i = 0; i < directions.size(); i++) {
-            if(directions.get(i).equals(Direction.OUTGOING))
-                words.add(relationships.get(i));
-            else
-                words.add("inv_" + relationships.get(i));
+        if(Settings.allowInverse) {
+            for (int i = 0; i < directions.size(); i++) {
+                if (directions.get(i).equals(Direction.OUTGOING))
+                    words.add(relationships.get(i));
+                else
+                    words.add("inv_" + relationships.get(i));
+            }
+        } else {
+            words.addAll(relationships);
         }
         return String.join("\t", words);
     }

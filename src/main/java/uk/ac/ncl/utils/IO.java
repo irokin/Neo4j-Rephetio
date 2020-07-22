@@ -83,9 +83,9 @@ public class IO {
         System.out.println("# #All: " + (negatives.size() + positives.size()));
     }
 
-    public static void writeMatrix(Table<Triple, MetaPath, Double> table, File home) {
-        File indexFile = new File(home, "data/metapath_index.txt");
-        File matrixFile = new File(home, "data/matrix.txt");
+    public static void writeMatrix(Table<Triple, MetaPath, Double> table, File out) {
+        File indexFile = new File(out, "metapath_index.txt");
+        File matrixFile = new File(out, "matrix.txt");
         DecimalFormat f = new DecimalFormat("###.#####");
 
         List<String> header = new ArrayList<>();
