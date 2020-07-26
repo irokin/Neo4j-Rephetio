@@ -97,7 +97,6 @@ public class Rephetio {
         System.out.println("# Finished Building Matrix: Time = " + (float) (System.currentTimeMillis() - s) / 1000. + "s");
 
         IO.writeMatrix(globalTable, outFile);
-
         return globalTable;
     }
 
@@ -117,8 +116,15 @@ public class Rephetio {
                 while (!queue.isEmpty()) {
                     Triple triple = queue.poll();
                     if (triple != null) {
-                        Node startNode = graph.getNodeById(nodeIndex.get(triple.sub));
-                        Node endNode = graph.getNodeById(nodeIndex.get(triple.obj));
+                        Long subId = nodeIndex.get(triple.sub);
+                        Long objId = nodeIndex.get(triple.obj);
+                        if(subId == null || objId == null) {
+                            System.out.println("WARNING: Found Instance with unknown entities");
+                            continue;
+                        }
+
+                        Node startNode = graph.getNodeById(subId);
+                        Node endNode = graph.getNodeById(objId);
 
                         Traverser traverser = graph.bidirectionalTraversalDescription().startSide(
                                 graph.traversalDescription().
@@ -138,7 +144,9 @@ public class Rephetio {
                             return Evaluation.INCLUDE_AND_CONTINUE;
                         })).traverse(startNode, endNode);
 
+                        List<Path> paths = new ArrayList<>();
                         for (Path path : traverser) {
+                            paths.add(path);
                             MetaPath metaPath = new MetaPath(path);
                             double pdp = Quality.PDP(path, 0.4);
                             if(!localTable.contains(triple, metaPath))
@@ -146,8 +154,12 @@ public class Rephetio {
                             else
                                 localTable.put(triple,metaPath, localTable.get(triple,metaPath) + pdp);
                         }
+                        if (paths.isEmpty()) {
+                            for (MetaPath metaPath : localTable.columnKeySet()) {
+                                localTable.put(triple, metaPath, 0.);
+                            }
+                        }
                     }
-//                    System.out.println("# Processed 1 triple | thread = " + getName());
                     Settings.updateProcessed();
                 }
                 tx.success();

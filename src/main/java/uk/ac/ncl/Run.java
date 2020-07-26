@@ -5,6 +5,7 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import uk.ac.ncl.model.Rephetio;
+import uk.ac.ncl.utils.Logging;
 
 import java.io.File;
 
@@ -21,6 +22,7 @@ public class Run {
                 File config = new File(cmd.getOptionValue("c"));
                 Rephetio system = new Rephetio(config);
                 system.buildFeatureMatrix();
+                Logging.report();
             }
         } catch (Exception e) {
             e.printStackTrace();

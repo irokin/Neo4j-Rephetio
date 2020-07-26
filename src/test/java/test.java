@@ -10,6 +10,13 @@ import java.io.File;
 
 public class test {
     @Test
+    public void run() {
+        File config = new File("data/Repotrial/config.json");
+        Rephetio system = new Rephetio(config);
+        system.buildFeatureMatrix();
+    }
+
+    @Test
     public void RephetioTest() {
         Settings.report();
 
@@ -48,5 +55,13 @@ public class test {
         Rephetio.loadGraph(graphFile);
 
         IO.generateInstancesHet(new File("data/het/data"));
+    }
+
+    @Test
+    public void generateInsForRepo() {
+        File graphFile = new File("data/Repotrial/databases/graph.db");
+        Rephetio.loadGraph(graphFile);
+//        IO.addUMLStoDisorder();
+        IO.generateInstancesRepo(new File("data/Repotrial/data"));
     }
 }
