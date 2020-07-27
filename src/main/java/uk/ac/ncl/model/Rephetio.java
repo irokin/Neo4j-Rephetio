@@ -1,9 +1,6 @@
 package uk.ac.ncl.model;
 
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Table;
+import com.google.common.collect.*;
 import org.json.JSONObject;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
@@ -154,8 +151,10 @@ public class Rephetio {
                             else
                                 localTable.put(triple,metaPath, localTable.get(triple,metaPath) + pdp);
                         }
+
                         if (paths.isEmpty()) {
-                            for (MetaPath metaPath : localTable.columnKeySet()) {
+                            List<MetaPath> columnKeyList = ImmutableList.copyOf(localTable.columnKeySet());
+                            for (MetaPath metaPath : columnKeyList) {
                                 localTable.put(triple, metaPath, 0.);
                             }
                         }

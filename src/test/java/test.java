@@ -5,6 +5,7 @@ import uk.ac.ncl.model.Rephetio;
 import uk.ac.ncl.structs.MetaPath;
 import uk.ac.ncl.structs.Triple;
 import uk.ac.ncl.utils.IO;
+import uk.ac.ncl.utils.Logging;
 
 import java.io.File;
 
@@ -31,22 +32,10 @@ public class test {
 
     @Test
     public void RephetioHetTest() {
-        Settings.threads = 8;
-        Settings.target = "TREATS_CtD";
-        Settings.identifier = "identifier";
-        Settings.report();
-
-        File home = new File("data/het/data");
-        File file = new File("data/het/data/positives.txt");
-        File graphFile = new File("data/het/databases/graph.db");
-
-        Rephetio system = new Rephetio(file);
-        Table<Triple, MetaPath, Double> table = system.buildFeatureMatrix();
-
-        System.out.println("Meta-paths: " + table.columnKeySet().size());
-        System.out.println("Triples: " + system.triples.length() + " | Rows: " + table.rowKeySet().size());
-
-        IO.writeMatrix(table, home);
+        File config = new File("data/het/config.json");
+        Rephetio system = new Rephetio(config);
+        system.buildFeatureMatrix();
+        Logging.report();
     }
 
     @Test
