@@ -41,6 +41,9 @@ public class Settings {
     }
 
     public static int processed = 0;
+    public static void resetProcessed() {
+        processed = 0;
+    }
     public static synchronized void updateProcessed() {
         processed++;
         if(processed % 500 == 0) {

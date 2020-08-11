@@ -1,8 +1,14 @@
 package uk.ac.ncl.structs;
 
 public class Triple {
-    public String sub, obj, pred;
+    public String sub, obj, pred, mark = "none";
     public boolean label;
+
+    public Triple(String sub, String pred, String obj, boolean label, String mark) {
+        this(sub, pred, obj);
+        this.label = label;
+        this.mark = mark;
+    }
 
     public Triple(String sub, String pred, String obj, boolean label) {
         this(sub, pred, obj);

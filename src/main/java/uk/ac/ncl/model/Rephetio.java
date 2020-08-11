@@ -6,6 +6,7 @@ import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.traversal.*;
 import uk.ac.ncl.utils.IO;
+import uk.ac.ncl.utils.Logging;
 import uk.ac.ncl.utils.Quality;
 import uk.ac.ncl.Settings;
 import uk.ac.ncl.structs.MetaPath;
@@ -19,7 +20,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 public class Rephetio {
 
-    public final TripleSet triples;
+    public TripleSet triples;
     public GraphDatabaseService graph;
     File outFile;
 
@@ -36,8 +37,13 @@ public class Rephetio {
     public Rephetio(File config) {
         JSONObject args = IO.buildJSONObject(config);
         Settings.home =  new File(config.getParent());
-        File posFile = new File(Settings.home, "data/positives.txt");
-        File negFile = new File(Settings.home, "data/negatives.txt");
+        String splitNum = String.valueOf(args.getInt("split"));
+
+        File trainFile = new File(Settings.home, "splits/split-" + splitNum + "/train.txt");
+        File validFile = new File(Settings.home, "splits/split-" + splitNum + "/valid.txt");
+        File testFile = new File(Settings.home, "splits/split-" + splitNum + "/test.txt");
+        File[] files = new File[]{trainFile, validFile, testFile};
+
         File graphFile = new File(Settings.home, "databases/graph.db");
 
         Settings.identifier = args.getString("identifier");
@@ -53,7 +59,7 @@ public class Rephetio {
 
         Settings.report();
 
-        triples = new TripleSet(posFile, negFile);
+        triples = new TripleSet(files);
         System.out.println("# Read " + triples.length() + " triples.");
 
         graph = new GraphDatabaseFactory().newEmbeddedDatabase(graphFile);
@@ -70,11 +76,11 @@ public class Rephetio {
         endDepth = Settings.depth - startDepth;
     }
 
-    public Table<Triple, MetaPath, Double> buildFeatureMatrix() {
+    public Set<MetaPath> buildFeatureMatrix() {
         long s = System.currentTimeMillis();
 
         Table<Triple, MetaPath, Double> globalTable = HashBasedTable.create();
-        List<Triple> tripleList = new ArrayList<>(triples.getTripleByPred(Settings.target));
+        List<Triple> tripleList = new ArrayList<>(triples.getKTripleByPred(Settings.target, 0));
 
         BlockingQueue<Triple> queue = new LinkedBlockingDeque<>(tripleList);
         TraverseTask[] tasks = new TraverseTask[Settings.threads];
@@ -91,10 +97,49 @@ public class Rephetio {
             System.exit(-1);
         }
 
+        Settings.resetProcessed();
         System.out.println("# Finished Building Matrix: Time = " + (float) (System.currentTimeMillis() - s) / 1000. + "s");
 
         IO.writeMatrix(globalTable, outFile);
-        return globalTable;
+        Set<MetaPath> metaPaths = new HashSet<>(globalTable.columnKeySet());
+        globalTable.clear();
+
+        return metaPaths;
+    }
+
+    public void buildCandidateMatrix(Set<MetaPath> metapaths) {
+        long s = System.currentTimeMillis();
+        System.out.println("\n# Start Building Candidate Matrix.");
+
+        TripleSet candidates = new TripleSet(new File(Settings.home, "splits/ranta_all_candidates.txt"));
+
+        Table<Triple, MetaPath, Double> candidateMatrix = HashBasedTable.create();
+
+        BlockingQueue<Triple> queue = new LinkedBlockingDeque<>(candidates.getKTripleByPred(Settings.target, 1000));
+        TraverseTask[] tasks = new TraverseTask[Settings.threads];
+        for (int i = 0; i < tasks.length; i++) {
+            tasks[i] = new TraverseTask(i, queue);
+        }
+        try {
+            for (TraverseTask task : tasks) {
+                task.join();
+                for (Triple triple : task.localTable.rowKeySet()) {
+                    for (MetaPath metapath : metapaths) {
+                        Double value = task.localTable.get(triple, metapath);
+                        if(value == null)
+                            candidateMatrix.put(triple, metapath, 0d);
+                        else
+                            candidateMatrix.put(triple, metapath, value);
+                    }
+                }
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
+        System.out.println("# Finished Building Candidate Matrix: Time = " + (float) (System.currentTimeMillis() - s) / 1000. + "s");
+        IO.writeCandidateMatrix(candidateMatrix, outFile);
     }
 
     class TraverseTask extends Thread {

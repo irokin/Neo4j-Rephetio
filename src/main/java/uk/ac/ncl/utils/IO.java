@@ -180,12 +180,47 @@ public class IO {
         System.out.println("# #All: " + (positives.size()));
     }
 
+    public static void writeCandidateMatrix(Table<Triple, MetaPath, Double> table, File out) {
+        File matrixFile = new File(out, "candidate_matrix.txt");
+        DecimalFormat f = new DecimalFormat("###.#####");
+
+        List<String> header = new ArrayList<>();
+        header.add("head");
+        header.add("tail");
+
+        System.out.println("# Metapaths: " + table.columnKeySet().size());
+        System.out.println("# Candidates: " + table.rowKeySet().size());
+
+        List<MetaPath> list = new ArrayList<>(table.columnKeySet());
+        for (int i = 0; i < list.size(); i++) {
+            header.add(String.valueOf(i));
+        }
+
+        try(PrintWriter writer = new PrintWriter(matrixFile)) {
+            writer.println(String.join("\t", header));
+            for (Triple triple : table.rowKeySet()) {
+                header.clear();
+                header.add(triple.sub);
+                header.add(triple.obj);
+                for (MetaPath metaPath : list) {
+                    Double value = table.get(triple, metaPath);
+                    header.add( value == null ? "0" : f.format(value));
+                }
+                writer.println(String.join("\t", header));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+    }
+
     public static void writeMatrix(Table<Triple, MetaPath, Double> table, File out) {
         File indexFile = new File(out, "metapath_index.txt");
         File matrixFile = new File(out, "matrix.txt");
         DecimalFormat f = new DecimalFormat("###.#####");
 
         List<String> header = new ArrayList<>();
+        header.add("as");
         header.add("head");
         header.add("tail");
         header.add("label");
@@ -208,6 +243,7 @@ public class IO {
             writer.println(String.join("\t", header));
             for (Triple triple : table.rowKeySet()) {
                 header.clear();
+                header.add(triple.mark);
                 header.add(triple.sub);
                 header.add(triple.obj);
                 header.add(triple.label ? "1" : "0");
