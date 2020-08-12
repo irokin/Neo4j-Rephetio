@@ -115,7 +115,7 @@ public class Rephetio {
 
         Table<Triple, MetaPath, Double> candidateMatrix = HashBasedTable.create();
 
-        BlockingQueue<Triple> queue = new LinkedBlockingDeque<>(candidates.getKTripleByPred(Settings.target, 1000));
+        BlockingQueue<Triple> queue = new LinkedBlockingDeque<>(candidates.getKTripleByPred(Settings.target, 0));
         TraverseTask[] tasks = new TraverseTask[Settings.threads];
         for (int i = 0; i < tasks.length; i++) {
             tasks[i] = new TraverseTask(i, queue);
