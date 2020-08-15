@@ -5,12 +5,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.json.JSONObject;
 import org.json.JSONTokener;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.*;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import uk.ac.ncl.Settings;
 import uk.ac.ncl.structs.MetaPath;
+import uk.ac.ncl.structs.Prediction;
 import uk.ac.ncl.structs.Triple;
 
 import java.io.*;
@@ -270,6 +269,67 @@ public class IO {
         }
 
         return args;
+    }
+
+    public static List<Prediction> readTopPredictions(File file) {
+        List<Prediction> predictions = new ArrayList<>();
+        try(LineIterator l = FileUtils.lineIterator(file)) {
+            while(l.hasNext()) {
+                String line = l.next();
+                if(line.startsWith("drugbank")) {
+                    String[] words = line.split("\t");
+                    Prediction current = new Prediction(words[0], words[1], Double.parseDouble(words[2]));
+                    predictions.add(current);
+//                    if(l.hasNext() && l.next().startsWith("positive")) {
+                    if(l.hasNext()) {
+                        while(l.hasNext()) {
+                            String nextLine = l.next();
+//                            if(nextLine.startsWith("negative") || nextLine.isEmpty())
+//                                break;
+                            if(nextLine.isEmpty())
+                                break;
+                            String[] nextWords = nextLine.split("\t");
+                            current.positiveEvidences.put(nextWords[0], Double.parseDouble(nextWords[1]));
+                        }
+//                        while(l.hasNext()) {
+//                            String nextLine = l.next();
+//                            if(nextLine.isEmpty())
+//                                break;
+//                            String[] nextWords = nextLine.split("\t");
+//                            current.negativeEvidences.put(nextWords[0], Double.parseDouble(nextWords[1]));
+//                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+        return predictions;
+    }
+
+    public static GraphDatabaseService createEmptyGraph(File graphHome) {
+        try {
+            if (graphHome.exists())
+                FileUtils.deleteDirectory(graphHome);
+            graphHome.mkdir();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+        File databaseFile = new File(graphHome, "databases/graph.db");
+        GraphDatabaseService graph = new GraphDatabaseFactory().newEmbeddedDatabase(databaseFile);
+        Runtime.getRuntime().addShutdownHook(new Thread(graph::shutdown));
+        return graph;
+    }
+
+    public static void copyNodes(Node left, Node right) {
+        for (Map.Entry<String, Object> entry : left.getAllProperties().entrySet()) {
+            right.setProperty(entry.getKey(), entry.getValue());
+        }
+        for (Label label : left.getLabels()) {
+            right.addLabel(label);
+        }
     }
 
 }
