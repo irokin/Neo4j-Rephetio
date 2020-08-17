@@ -1,22 +1,30 @@
 package uk.ac.ncl;
 
 import org.neo4j.graphdb.GraphDatabaseService;
+import uk.ac.ncl.structs.MetaPath;
+import uk.ac.ncl.structs.Triple;
+import uk.ac.ncl.utils.Logging;
 
 import java.io.File;
 import java.text.MessageFormat;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Settings {
 
     public static void report() {
-        System.out.println(MessageFormat.format("# Settings:\n" +
+        Logging.println(MessageFormat.format("# Settings:\n" +
                 "# Identifier: {0} | Depth: {1}\n" +
                 "# Target: {2} | Threads: {3}\n" +
-                        "# Inverse: {4}",
+                        "# Inverse: {4} | Random Walker: {5}\n" +
+                        "# EntityType {6}\n",
                 identifier,
                 depth,
                 target,
                 threads,
-                allowInverse));
+                allowInverse,
+                rw,
+                entityType));
     }
 
     public static String identifier = "name";
@@ -26,11 +34,12 @@ public class Settings {
     public static int rw = 150;
     public static File home;
     public static boolean allowInverse = false;
+    public static boolean entityType = true;
 
     private static GraphDatabaseService currentGraph;
     public static void setCurrentGraph(GraphDatabaseService graph) {
         currentGraph = graph;
-        System.out.println("# Set Current Graph #");
+        Logging.println("# Set Current Graph #");
     }
     public static GraphDatabaseService getCurrentGraph() {
         if(currentGraph == null) {
@@ -47,7 +56,15 @@ public class Settings {
     public static synchronized void updateProcessed() {
         processed++;
         if(processed % 500 == 0) {
-            System.out.println("####### Processed " + processed + " triples ########");
+            Logging.println("####### Processed " + processed + " triples ########");
         }
+    }
+
+    public static Set<Triple> emptyTriples = new HashSet<>();
+    public static synchronized void updateEmptyTriples(Triple triple) {
+        emptyTriples.add(triple);
+    }
+    public static void resetEmptyTriples() {
+        emptyTriples.clear();
     }
 }

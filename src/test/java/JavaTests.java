@@ -1,6 +1,7 @@
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import org.junit.Test;
+import uk.ac.ncl.utils.Logging;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -17,7 +18,7 @@ public class JavaTests {
         report.put("James", "Math", 100);
         report.put("Alice", "Java", 100);
 
-        System.out.println( Math.pow(25, 0.5));
+        System.out.println(String.valueOf(Math.pow(25, 0.5)));
 
         int startD = 4;
         int endD = 1;
@@ -28,7 +29,7 @@ public class JavaTests {
         for (int degree : degrees) {
             pdp *= (double) 1 / Math.pow(degree, dump);
         }
-        System.out.println(pdp);
+        System.out.println(String.valueOf(pdp));
     }
 
     @Test

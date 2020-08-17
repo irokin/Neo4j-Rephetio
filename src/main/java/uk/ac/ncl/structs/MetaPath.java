@@ -17,11 +17,15 @@ public class MetaPath {
     }
 
     public MetaPath(Path path) {
-        try (Transaction tx = Settings.getCurrentGraph().beginTx()) {
+        GraphDatabaseService graph = Settings.getCurrentGraph();
+        try (Transaction tx = graph.beginTx()) {
             List<Node> neo4jNodes = new ArrayList<>();
             path.nodes().forEach(neo4jNodes::add);
             for (int i = 0; i < neo4jNodes.size(); i++) {
-                nodes.add("V" + i);
+                if(Settings.entityType)
+                    nodes.add(neo4jNodes.get(i).getLabels().iterator().next().name());
+                else
+                    nodes.add("V" + i);
             }
             List<Relationship> neo4jRels = new ArrayList<>();
             path.relationships().forEach(neo4jRels::add);

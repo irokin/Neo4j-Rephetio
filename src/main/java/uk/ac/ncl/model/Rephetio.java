@@ -52,15 +52,17 @@ public class Rephetio {
         Settings.depth = args.getInt("depth");
         Settings.rw = args.getInt("rw");
         Settings.allowInverse = args.getBoolean("inverse");
+        Settings.entityType = args.getBoolean("entityType");
 
         outFile = new File(Settings.home, args.getString("out"));
         if(!outFile.exists())
             outFile.mkdir();
 
+        Logging.init(new File(outFile, args.getString("logFile")));
         Settings.report();
 
         triples = new TripleSet(files);
-        System.out.println("# Read " + triples.length() + " triples.");
+        Logging.println("# Read " + triples.length() + " triples.");
 
         graph = new GraphDatabaseFactory().newEmbeddedDatabase(graphFile);
         Runtime.getRuntime().addShutdownHook(new Thread(graph::shutdown));
@@ -70,7 +72,7 @@ public class Rephetio {
             graph.getAllNodes().forEach( node -> nodeIndex.put(String.valueOf(node.getProperty(Settings.identifier)), node.getId()));
             tx.success();
         }
-        System.out.println("# Finished Indexing nodes by identifiers.");
+        Logging.println("# Finished Indexing nodes by identifiers.");
 
         startDepth = Math.floorDiv(Settings.depth, 2);
         endDepth = Settings.depth - startDepth;
@@ -97,10 +99,12 @@ public class Rephetio {
             System.exit(-1);
         }
 
+        Logging.println("####### Processed " + Settings.processed + " triples ########");
         Settings.resetProcessed();
-        System.out.println("# Finished Building Matrix: Time = " + (float) (System.currentTimeMillis() - s) / 1000. + "s");
+        Logging.println("# Finished Building Matrix: Time = " + (float) (System.currentTimeMillis() - s) / 1000. + "s");
 
         IO.writeMatrix(globalTable, outFile);
+        Settings.resetEmptyTriples();
         Set<MetaPath> metaPaths = new HashSet<>(globalTable.columnKeySet());
         globalTable.clear();
 
@@ -109,7 +113,7 @@ public class Rephetio {
 
     public void buildCandidateMatrix(Set<MetaPath> metapaths) {
         long s = System.currentTimeMillis();
-        System.out.println("\n# Start Building Candidate Matrix.");
+        Logging.println("\n# Start Building Candidate Matrix.");
 
         TripleSet candidates = new TripleSet(new File(Settings.home, "splits/ranta_all_candidates.txt"));
 
@@ -138,7 +142,7 @@ public class Rephetio {
             System.exit(-1);
         }
 
-        System.out.println("# Finished Building Candidate Matrix: Time = " + (float) (System.currentTimeMillis() - s) / 1000. + "s");
+        Logging.println("# Finished Building Candidate Matrix: Time = " + (float) (System.currentTimeMillis() - s) / 1000. + "s");
         IO.writeCandidateMatrix(candidateMatrix, outFile);
     }
 
@@ -161,7 +165,7 @@ public class Rephetio {
                         Long subId = nodeIndex.get(triple.sub);
                         Long objId = nodeIndex.get(triple.obj);
                         if(subId == null || objId == null) {
-                            System.out.println("WARNING: Found Instance with unknown entities");
+                            Logging.println("WARNING: Found Instance with unknown entities");
                             continue;
                         }
 
@@ -198,10 +202,11 @@ public class Rephetio {
                         }
 
                         if (paths.isEmpty()) {
-                            List<MetaPath> columnKeyList = ImmutableList.copyOf(localTable.columnKeySet());
-                            for (MetaPath metaPath : columnKeyList) {
-                                localTable.put(triple, metaPath, 0.);
-                            }
+                            Settings.updateEmptyTriples(triple);
+//                            List<MetaPath> columnKeyList = ImmutableList.copyOf(localTable.columnKeySet());
+//                            for (MetaPath metaPath : columnKeyList) {
+//                                localTable.put(triple, metaPath, 0.);
+//                            }
                         }
                     }
                     Settings.updateProcessed();

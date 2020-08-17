@@ -13,7 +13,7 @@ public class test {
     public void run() {
         File config = new File("data/Repotrial/config.json");
         Rephetio system = new Rephetio(config);
-        system.buildCandidateMatrix(system.buildFeatureMatrix());
+        system.buildFeatureMatrix();
     }
 
     @Test

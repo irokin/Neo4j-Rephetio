@@ -5,6 +5,7 @@ import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import uk.ac.ncl.structs.Prediction;
 import uk.ac.ncl.utils.IO;
+import uk.ac.ncl.utils.Logging;
 
 import java.io.File;
 import java.util.*;
@@ -46,7 +47,7 @@ public class PredictionGraph {
     }
 
     public void build() {
-        System.out.println("# Start Building Prediction Graph:");
+        Logging.println("# Start Building Prediction Graph:");
 
         Map<String, Long> createdNodes = new HashMap<>();
         try(Transaction tx = graph.beginTx()) {
@@ -91,7 +92,7 @@ public class PredictionGraph {
 
                         count++;
                     } while (count % 500 != 0);
-                    System.out.println("# Populated " + count + " predictions");
+                    Logging.println("# Populated " + count + " predictions");
                     predTx.success();
                 }
             }

@@ -18,30 +18,6 @@ import java.util.*;
 
 public class IO {
 
-    public static void addUMLStoDisorder() {
-        GraphDatabaseService graph = Settings.getCurrentGraph();
-        int nodeCount = 0;
-        int haveNameCount = 0;
-        try(Transaction tx = graph.beginTx()) {
-            for (Node node : graph.getAllNodes()) {
-                nodeCount++;
-                if(node.getLabels().iterator().next().name().equals("Disorder")) {
-                    String[] names = (String[]) node.getProperty("domainIds");
-                    for (String name : names) {
-                        if(name.contains("umls")) {
-                            haveNameCount++;
-                            node.setProperty("primaryDomainId", name);
-                        }
-                    }
-                }
-            }
-            tx.success();
-        }
-        System.out.println(nodeCount);
-        System.out.println(haveNameCount);
-    }
-
-
     public static void generateInstancesHet(File out) {
         GraphDatabaseService graph = Settings.getCurrentGraph();
         File posFile = new File(out, "positives.txt");
@@ -63,8 +39,8 @@ public class IO {
                     diseases.add((String) node.getProperty("identifier"));
             }
 
-            System.out.println("# #Compounds: " + compounds.size());
-            System.out.println("# #Disease: " + diseases.size());
+            Logging.println("# #Compounds: " + compounds.size());
+            Logging.println("# #Disease: " + diseases.size());
 
             for (Relationship rel : graph.getAllRelationships()) {
                 String type = rel.getType().name();
@@ -77,7 +53,7 @@ public class IO {
                 }
             }
 
-            System.out.println("# #Positives: " + positives.size());
+            Logging.println("# #Positives: " + positives.size());
             tx.success();
         }
 
@@ -104,8 +80,8 @@ public class IO {
             System.exit(-1);
         }
 
-        System.out.println("# #Negatives: " + negatives.size());
-        System.out.println("# #All: " + (negatives.size() + positives.size()));
+        Logging.println("# #Negatives: " + negatives.size());
+        Logging.println("# #All: " + (negatives.size() + positives.size()));
     }
 
     public static void generateInstancesRepo(File out) {
@@ -151,8 +127,8 @@ public class IO {
                     diseases.add((String) node.getProperty("primaryDomainId"));
             }
 
-            System.out.println("# #Drugs: " + compounds.size());
-            System.out.println("# #Diseases: " + diseases.size());
+            Logging.println("# #Drugs: " + compounds.size());
+            Logging.println("# #Diseases: " + diseases.size());
 
             for (Relationship rel : graph.getAllRelationships()) {
                 String type = rel.getType().name();
@@ -165,7 +141,7 @@ public class IO {
                 }
             }
 
-            System.out.println("# #Positives: " + positives.size());
+            Logging.println("# #Positives: " + positives.size());
             tx.success();
         }
 
@@ -176,19 +152,24 @@ public class IO {
             System.exit(-1);
         }
 
-        System.out.println("# #All: " + (positives.size()));
+        Logging.println("# #All: " + (positives.size()));
     }
 
     public static void writeCandidateMatrix(Table<Triple, MetaPath, Double> table, File out) {
         File matrixFile = new File(out, "candidate_matrix.txt");
         DecimalFormat f = new DecimalFormat("###.#####");
+        Set<Triple> emptyTriples = Settings.emptyTriples;
 
         List<String> header = new ArrayList<>();
         header.add("head");
         header.add("tail");
 
-        System.out.println("# Metapaths: " + table.columnKeySet().size());
-        System.out.println("# Candidates: " + table.rowKeySet().size());
+        Logging.println("# Metapaths: " + table.columnKeySet().size());
+        Logging.println("# Candidates: " +
+                table.rowKeySet().size() +
+                " | Empty Candidates: " +
+                emptyTriples.size() +
+                " | All: " + (table.rowKeySet().size() + emptyTriples.size()));
 
         List<MetaPath> list = new ArrayList<>(table.columnKeySet());
         for (int i = 0; i < list.size(); i++) {
@@ -207,6 +188,15 @@ public class IO {
                 }
                 writer.println(String.join("\t", header));
             }
+            for (Triple triple : emptyTriples) {
+                header.clear();
+                header.add(triple.sub);
+                header.add(triple.obj);
+                for (MetaPath metaPath : list) {
+                    header.add("0");
+                }
+                writer.println(String.join("\t", header));
+            }
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(-1);
@@ -217,6 +207,7 @@ public class IO {
         File indexFile = new File(out, "metapath_index.txt");
         File matrixFile = new File(out, "matrix.txt");
         DecimalFormat f = new DecimalFormat("###.#####");
+        Set<Triple> emptyTriples = Settings.emptyTriples;
 
         List<String> header = new ArrayList<>();
         header.add("as");
@@ -224,13 +215,17 @@ public class IO {
         header.add("tail");
         header.add("label");
 
-        System.out.println("# Metapaths: " + table.columnKeySet().size());
-        System.out.println("# Valid Triples: " + table.rowKeySet().size());
+        Logging.println("# Metapaths: " + table.columnKeySet().size());
+        Logging.println("# Valid Triples: " +
+                table.rowKeySet().size() +
+                " | Empty Triples: " +
+                emptyTriples.size() +
+                " | All: " + (table.rowKeySet().size() + emptyTriples.size()));
 
         List<MetaPath> list = new ArrayList<>(table.columnKeySet());
         try(PrintWriter writer = new PrintWriter(indexFile)) {
             for (int i = 0; i < list.size(); i++) {
-                writer.println(i + "\t" + list.get(i).toOutString());
+                writer.println(i + "\t" + list.get(i).toString());
                 header.add(String.valueOf(i));
             }
         } catch (IOException e) {
@@ -249,6 +244,17 @@ public class IO {
                 for (MetaPath metaPath : list) {
                     Double value = table.get(triple, metaPath);
                     header.add( value == null ? "0" : f.format(value));
+                }
+                writer.println(String.join("\t", header));
+            }
+            for (Triple triple : emptyTriples) {
+                header.clear();
+                header.add(triple.mark);
+                header.add(triple.sub);
+                header.add(triple.obj);
+                header.add(triple.label ? "1" : "0");
+                for (MetaPath metaPath : list) {
+                    header.add("0");
                 }
                 writer.println(String.join("\t", header));
             }
