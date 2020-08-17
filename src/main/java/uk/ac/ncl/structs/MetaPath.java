@@ -68,10 +68,13 @@ public class MetaPath {
             }
         } else {
             for (int i = 0; i < relationships.size(); i++) {
-                words.add(relationships.get(i) + "(" + nodes.get(i) + ", " + nodes.get(i + 1) + ")");
+//                words.add(relationships.get(i) + "(" + nodes.get(i) + ", " + nodes.get(i + 1) + ")");
+                words.add(nodes.get(i));
+                words.add(relationships.get(i));
             }
+            words.add(nodes.get(nodes.size() - 1));
         }
-        return String.join(", ", words);
+        return String.join(",", words);
     }
 
     public String toOutString() {
