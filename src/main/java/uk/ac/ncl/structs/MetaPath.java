@@ -3,6 +3,7 @@ package uk.ac.ncl.structs;
 import org.neo4j.graphdb.*;
 import uk.ac.ncl.Settings;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +12,7 @@ public class MetaPath {
     public List<Direction> directions = new ArrayList<>();
     public List<String> nodes = new ArrayList<>();
     public List<String> relationships = new ArrayList<>();
+    public int index;
 
     public int getLength() {
         return relationships.size();
@@ -21,11 +23,18 @@ public class MetaPath {
         try (Transaction tx = graph.beginTx()) {
             List<Node> neo4jNodes = new ArrayList<>();
             path.nodes().forEach(neo4jNodes::add);
+            int count = 0;
             for (int i = 0; i < neo4jNodes.size(); i++) {
                 if(Settings.entityType)
                     nodes.add(neo4jNodes.get(i).getLabels().iterator().next().name());
-                else
-                    nodes.add("V" + i);
+                else {
+                    if(i == 0)
+                        nodes.add("X");
+                    else if (i == neo4jNodes.size() - 1)
+                        nodes.add("Y");
+                    else
+                        nodes.add("V" + count++);
+                }
             }
             List<Relationship> neo4jRels = new ArrayList<>();
             path.relationships().forEach(neo4jRels::add);
@@ -90,5 +99,44 @@ public class MetaPath {
             words.addAll(relationships);
         }
         return String.join("\t", words);
+    }
+
+    public String toRawRuleString() {
+        List<String> words = new ArrayList<>();
+        List<String> word = new ArrayList<>();
+        words.add(String.valueOf(index));
+        words.add("CAR");
+
+        word.add("+");
+        word.add(Settings.target);
+        word.add("X");
+        word.add("Y");
+        words.add(String.join(",", word));
+
+        for (int i = 0; i < relationships.size(); i++) {
+            word.clear();
+            word.add(directions.get(i).equals(Direction.OUTGOING) ? "+" : "-");
+            word.add(relationships.get(i));
+            word.add(nodes.get(i));
+            word.add(nodes.get(i + 1));
+            words.add(String.join(",", word));
+        }
+        return String.join("\t", words);
+    }
+
+    public String toRuleString() {
+        List<String> words = new ArrayList<>();
+        List<String> word = new ArrayList<>();
+        words.add(String.valueOf(index));
+        words.add("CAR");
+        words.add(MessageFormat.format("{0}({1},{2}) <- ", Settings.target
+                , "X", "Y"));
+
+        for (int i = 0; i < relationships.size(); i++) {
+            String sub = directions.get(i).equals(Direction.OUTGOING) ? nodes.get(i) : nodes.get(i + 1);
+            String obj = directions.get(i).equals(Direction.OUTGOING) ? nodes.get(i + 1) : nodes.get(i);
+            word.add(MessageFormat.format("{0}({1},{2})", relationships.get(i), sub, obj));
+        }
+        return String.join("\t", words) + String.join(", ", word);
     }
 }

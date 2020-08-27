@@ -204,8 +204,9 @@ public class IO {
     }
 
     public static void writeMatrix(Table<Triple, MetaPath, Double> table, File out) {
-        File indexFile = new File(out, "metapath_index.txt");
-        File matrixFile = new File(out, "matrix.txt");
+        File rawRuleFile = new File(out, "ranta_raw_rule_index.txt");
+        File ruleFile = new File(out, "ranta_rule_index.txt");
+        File matrixFile = new File(out, "ranta_matrix.txt");
         DecimalFormat f = new DecimalFormat("###.#####");
         Set<Triple> emptyTriples = Settings.emptyTriples;
 
@@ -223,10 +224,18 @@ public class IO {
                 " | All: " + (table.rowKeySet().size() + emptyTriples.size()));
 
         List<MetaPath> list = new ArrayList<>(table.columnKeySet());
-        try(PrintWriter writer = new PrintWriter(indexFile)) {
-            for (int i = 0; i < list.size(); i++) {
-                writer.println(i + "\t" + list.get(i).toString());
-                header.add(String.valueOf(i));
+        for (int i = 0; i < list.size(); i++) {
+            list.get(i).index = i;
+        }
+
+        try(PrintWriter writer = new PrintWriter(ruleFile)) {
+            try(PrintWriter rawWriter = new PrintWriter(rawRuleFile)) {
+                for (int i = 0; i < list.size(); i++) {
+                    MetaPath current = list.get(i);
+                    writer.println(current.toRuleString());
+                    rawWriter.println(current.toRawRuleString());
+                    header.add(String.valueOf(current.index));
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();

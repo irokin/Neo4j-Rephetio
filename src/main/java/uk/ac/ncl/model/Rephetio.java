@@ -203,10 +203,6 @@ public class Rephetio {
 
                         if (paths.isEmpty()) {
                             Settings.updateEmptyTriples(triple);
-//                            List<MetaPath> columnKeyList = ImmutableList.copyOf(localTable.columnKeySet());
-//                            for (MetaPath metaPath : columnKeyList) {
-//                                localTable.put(triple, metaPath, 0.);
-//                            }
                         }
                     }
                     Settings.updateProcessed();

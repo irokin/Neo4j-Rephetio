@@ -25,6 +25,7 @@ public class Run {
                 File config = new File(cmd.getOptionValue("c"));
                 Rephetio system = new Rephetio(config);
                 Set<MetaPath> metaPaths = system.buildFeatureMatrix();
+
                 if(cmd.hasOption("cm"))
                     system.buildCandidateMatrix(metaPaths);
                 Logging.report();
