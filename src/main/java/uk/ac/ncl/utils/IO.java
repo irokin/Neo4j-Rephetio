@@ -204,8 +204,8 @@ public class IO {
     }
 
     public static void writeMatrix(Table<Triple, MetaPath, Double> table, File out) {
-        File rawRuleFile = new File(out, "ranta_raw_rule_index.txt");
-        File ruleFile = new File(out, "ranta_rule_index.txt");
+        File rawRuleFile = new File(out, "ranta_rawRuleId.txt");
+        File ruleFile = new File(out, "ranta_ruleId.txt");
         File matrixFile = new File(out, "ranta_matrix.txt");
         DecimalFormat f = new DecimalFormat("###.#####");
         Set<Triple> emptyTriples = Settings.emptyTriples;

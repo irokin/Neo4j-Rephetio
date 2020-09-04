@@ -115,7 +115,7 @@ public class Rephetio {
         long s = System.currentTimeMillis();
         Logging.println("\n# Start Building Candidate Matrix.");
 
-        TripleSet candidates = new TripleSet(new File(Settings.home, "splits/ranta_all_candidates.txt"));
+        TripleSet candidates = new TripleSet(new File(Settings.home, "splits/candidates.txt"));
 
         Table<Triple, MetaPath, Double> candidateMatrix = HashBasedTable.create();
 
