@@ -39,7 +39,7 @@ public class Settings {
     private static GraphDatabaseService currentGraph;
     public static void setCurrentGraph(GraphDatabaseService graph) {
         currentGraph = graph;
-        Logging.println("# Set Current Graph #");
+//        Logging.println("# Set Current Graph #");
     }
     public static GraphDatabaseService getCurrentGraph() {
         if(currentGraph == null) {

@@ -1,4 +1,7 @@
 import org.junit.Test;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Transaction;
+import uk.ac.ncl.Settings;
 import uk.ac.ncl.model.PredictionGraph;
 import uk.ac.ncl.model.Rephetio;
 import uk.ac.ncl.structs.Prediction;
@@ -11,7 +14,7 @@ import java.util.List;
 public class test {
     @Test
     public void run() {
-        File config = new File("data/Repotrial/config.json");
+        File config = new File("data/Hetionet/config.json");
         Rephetio system = new Rephetio(config);
         system.buildFeatureMatrix();
     }
@@ -58,5 +61,27 @@ public class test {
         Rephetio.loadGraph(graphFile);
 //        IO.addUMLStoDisorder();
         IO.generateInstancesRepo(new File("data/Repotrial/data"));
+    }
+
+    @Test
+    public void reportGraphInfo() {
+        File graphFile = new File("data/Hetionet/databases/graph.db");
+        Rephetio.loadGraph(graphFile);
+        GraphDatabaseService graph = Settings.getCurrentGraph();
+        try(Transaction tx =graph.beginTx()) {
+            long relCount = graph.getAllRelationships().stream().count();
+            System.out.println("Relationships: " + relCount);
+
+            long nodes =  graph.getAllNodes().stream().count();
+            System.out.println("Nodes: " + nodes);
+
+            long relTypeCount = graph.getAllRelationshipTypes().stream().count();
+            System.out.println("Relationship Types: " + relTypeCount);
+
+            long nodeTypes = graph.getAllNodes().stream().count();
+            System.out.println("Node Types: " + nodeTypes);
+
+            tx.success();
+        }
     }
 }

@@ -61,7 +61,12 @@ public class Rephetio {
         Logging.init(new File(outFile, args.getString("logFile")));
         Settings.report();
 
-        triples = new TripleSet(files);
+        if(trainFile.exists())
+            triples = new TripleSet(files);
+        else
+            triples = new TripleSet(new File(Settings.home, "data/positives.txt")
+                    , new File(Settings.home, "data/negatives.txt"));
+
         Logging.println("# Read " + triples.length() + " triples.");
 
         graph = new GraphDatabaseFactory().newEmbeddedDatabase(graphFile);
